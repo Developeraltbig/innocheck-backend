@@ -5,86 +5,17 @@ const fs = require("fs"); // Interacts with the file system.
 const axios = require("axios"); // Makes HTTP requests.
 const pdf = require("pdf-parse"); // Extracts content from PDF files.
 const mammoth = require("mammoth"); // Converts DOCX files to HTML or plain text.
-const mongoose = require('mongoose')
-const bcrypt = require('bcryptjs')
-const Registration = require('./models/Registration');
-const { loginUser } =  require('./models/login'); 
-
-
 
 require("dotenv").config();
 
 const app = express();
-// const PORT = process.env.PORT || 5000;
-
-mongoose.connect('mongodb://127.0.0.1:27017/inno_360')
-  .then(()=>console.log('MongoDB Connected Successfully'))
-  .catch(() => console.log('MongoDB Connection error:',err))
-
-
-
-  app.get('/',(req,res) => {
-    res.send('Server is Running!')
-  })
-
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
-
-
-// sign up API
-
-app.post('/register', async (req,res) => {
-
-  const{name,email,password} = req.body
-  try{
-    if(!name || !email || !password){
-      return res.status(400).json({message: 'All fields are required'})
-
-    }
-
-    const existingUser = await Registration.findOne({email})
-    if(existingUser){
-      return res.status(400).json({message: 'Email already registered'});
-    }
-    
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password,salt);
-
-    const newUser = new Registration({
-      name,
-      email,
-      password:hashedPassword,
-
-    })
-
-    await newUser.save()
-    res.status(201).json({message:'User Registration Successfully'});
-  }
-  catch{
-    console.error(error);
-    res.status(500).json({message:'Server error, please try Again'});
-  }
-})
-
-
-app.post('/login',async(req,res) => {
-  const {email,password} = res.body;
-
-  try {
-    if(!email || !password){
-      return res.status(400).json({message:'Email and password are required'});
-    }
-    const user = await loginUser(email,password)
-    res.status(200).json({message:'Login Successfully',user });
-  }catch(error){
-    res.status(400).json({message:error.message})
-  }
-})
-
 
 // Endpoint to upload files
 app.post("/upload", upload.single("file"), async (req, res) => {
@@ -158,13 +89,6 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-
-
-
-
-app.listen(3000, () => {
-  console.log("Server listening on http://127.0.0.1:3000");
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-// });
